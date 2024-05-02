@@ -3,7 +3,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdocumentation"
 #pragma clang diagnostic ignored "-Wdocumentation-deprecated-sync"
-#import "CrashReporter.h"
+#import <CrashReporter/CrashReporter.h>
 #pragma clang diagnostic pop
 
 // stores the set of crashreports that have been approved but aren't sent yet
@@ -52,11 +52,11 @@
 - (instancetype)initWithAppIdentifier:(NSString *)appIdentifier hockeyAppClient:(BITHockeyAppClient *)hockeyAppClient NS_DESIGNATED_INITIALIZER;
 
 - (void)cleanCrashReports;
-- (NSString *)extractAppUUIDs:(BITPLCrashReport *)report;
+- (NSString *)extractAppUUIDs:(PLCrashReport *)report;
 
 - (BOOL)persistAttachment:(BITHockeyAttachment *)attachment withFilename:(NSString *)filename;
 
-- (BITHockeyAttachment *)attachmentForCrashReport:(NSString *)filename;
+- (NSArray <BITHockeyAttachment *> *)attachmentsForCrashReport:(NSString *)filename;
 
 - (void)setLastCrashFilename:(NSString *)lastCrashFilename;
 

@@ -53,10 +53,10 @@ typedef NS_ENUM (NSInteger, BITBinaryImageType) {
 
 
 @interface BITCrashReportTextFormatter (PrivateAPI)
-+ (NSString *)bit_archNameFromImageInfo:(BITPLCrashReportBinaryImageInfo *)imageInfo;
-+ (NSString *)bit_formatStackFrame:(BITPLCrashReportStackFrameInfo *)frameInfo
++ (NSString *)bit_archNameFromImageInfo:(PLCrashReportBinaryImageInfo *)imageInfo;
++ (NSString *)bit_formatStackFrame:(PLCrashReportStackFrameInfo *)frameInfo
                         frameIndex:(NSUInteger)frameIndex
-                            report:(BITPLCrashReport *)report
+                            report:(PLCrashReport *)report
                               lp64: (BOOL) lp64;
 @end
 
@@ -198,7 +198,7 @@ static const char *findSEL (const char *imageName, NSString *imageUUID, uint64_t
  *
  * @return Returns the formatted result on success, or nil if an error occurs.
  */
-+ (NSString *)stringValueForCrashReport:(BITPLCrashReport *)report crashReporterKey:(NSString *)crashReporterKey {
++ (NSString *)stringValueForCrashReport:(PLCrashReport *)report crashReporterKey:(NSString *)crashReporterKey {
 	NSMutableString* text = [NSMutableString string];
 	BOOL lp64 = true; // quiesce GCC uninitialized value warning
     
@@ -225,7 +225,7 @@ static const char *findSEL (const char *imageName, NSString *imageUUID, uint64_t
     NSString *codeType = nil;
     {
         /* Attempt to derive the code type from the binary images */
-        for (BITPLCrashReportBinaryImageInfo *image in report.images) {
+        for (PLCrashReportBinaryImageInfo *image in report.images) {
             /* Skip images with no specified type */
             if (image.codeType == nil)
                 continue;
@@ -397,8 +397,8 @@ static const char *findSEL (const char *imageName, NSString *imageUUID, uint64_t
     [text appendFormat: @"Exception Type:  %@\n", report.signalInfo.name];
     [text appendFormat: @"Exception Codes: %@ at 0x%" PRIx64 "\n", report.signalInfo.code, report.signalInfo.address];
     
-    BITPLCrashReportThreadInfo *crashed_thread = nil;
-    for (BITPLCrashReportThreadInfo *thread in report.threads) {
+    PLCrashReportThreadInfo *crashed_thread = nil;
+    for (PLCrashReportThreadInfo *thread in report.threads) {
         if (thread.crashed) {
             crashed_thread = thread;
             [text appendFormat: @"Crashed Thread:  %ld\n", (long) thread.threadNumber];
@@ -439,7 +439,7 @@ static const char *findSEL (const char *imageName, NSString *imageUUID, uint64_t
     
     /* If an exception stack trace is available, output an Apple-compatible backtrace. */
     if (report.exceptionInfo != nil && report.exceptionInfo.stackFrames != nil && [report.exceptionInfo.stackFrames count] > 0) {
-        BITPLCrashReportExceptionInfo *exception = report.exceptionInfo;
+        PLCrashReportExceptionInfo *exception = report.exceptionInfo;
         
         /* Create the header. */
         [text appendString: @"Last Exception Backtrace:\n"];
@@ -447,7 +447,7 @@ static const char *findSEL (const char *imageName, NSString *imageUUID, uint64_t
         /* Write out the frames. In raw reports, Apple writes this out as a simple list of PCs. In the minimally
          * post-processed report, Apple writes this out as full frame entries. We use the latter format. */
         for (NSUInteger frame_idx = 0; frame_idx < [exception.stackFrames count]; frame_idx++) {
-            BITPLCrashReportStackFrameInfo *frameInfo = [exception.stackFrames objectAtIndex:frame_idx];
+            PLCrashReportStackFrameInfo *frameInfo = [exception.stackFrames objectAtIndex:frame_idx];
             [text appendString: [self bit_formatStackFrame: frameInfo frameIndex: frame_idx report: report lp64: lp64]];
         }
         [text appendString: @"\n"];
@@ -455,7 +455,7 @@ static const char *findSEL (const char *imageName, NSString *imageUUID, uint64_t
     
     /* Threads */
     NSInteger maxThreadNum = 0;
-    for (BITPLCrashReportThreadInfo *thread in report.threads) {
+    for (PLCrashReportThreadInfo *thread in report.threads) {
         if (thread.crashed) {
             [text appendFormat: @"Thread %ld Crashed:\n", (long) thread.threadNumber];
             crashed_thread = thread;
@@ -463,7 +463,7 @@ static const char *findSEL (const char *imageName, NSString *imageUUID, uint64_t
             [text appendFormat: @"Thread %ld:\n", (long) thread.threadNumber];
         }
         for (NSUInteger frame_idx = 0; frame_idx < [thread.stackFrames count]; frame_idx++) {
-            BITPLCrashReportStackFrameInfo *frameInfo = [thread.stackFrames objectAtIndex:frame_idx];
+            PLCrashReportStackFrameInfo *frameInfo = [thread.stackFrames objectAtIndex:frame_idx];
             [text appendString: [self bit_formatStackFrame: frameInfo frameIndex: frame_idx report: report lp64: lp64]];
         }
         [text appendString: @"\n"];
@@ -477,7 +477,7 @@ static const char *findSEL (const char *imageName, NSString *imageUUID, uint64_t
         [text appendFormat: @"Thread %ld crashed with %@ Thread State:\n", (long) crashed_thread.threadNumber, codeType];
         
         int regColumn = 0;
-        for (BITPLCrashReportRegisterInfo *reg in crashed_thread.registers) {
+        for (PLCrashReportRegisterInfo *reg in crashed_thread.registers) {
             NSString *reg_fmt;
             
             /* Use 32-bit or 64-bit fixed width format for the register values */
@@ -514,7 +514,7 @@ static const char *findSEL (const char *imageName, NSString *imageUUID, uint64_t
     
     /* Images. The iPhone crash report format sorts these in ascending order, by the base address */
     [text appendString: @"Binary Images:\n"];
-    for (BITPLCrashReportBinaryImageInfo *imageInfo in [report.images sortedArrayUsingFunction: binaryImageSort context: nil]) {
+    for (PLCrashReportBinaryImageInfo *imageInfo in [report.images sortedArrayUsingFunction: binaryImageSort context: nil]) {
         NSString *uuid;
         /* Fetch the UUID if it exists */
         if (imageInfo.hasImageUUID)
@@ -569,11 +569,11 @@ static const char *findSEL (const char *imageName, NSString *imageUUID, uint64_t
  *
  *  @return The selector as a C string or NULL if no selector was found
  */
-+ (NSString *)selectorForRegisterWithName:(NSString *)regName ofThread:(BITPLCrashReportThreadInfo *)thread report:(BITPLCrashReport *)report {
++ (NSString *)selectorForRegisterWithName:(NSString *)regName ofThread:(PLCrashReportThreadInfo *)thread report:(PLCrashReport *)report {
     // get the address for the register
     uint64_t regAddress = 0;
     
-    for (BITPLCrashReportRegisterInfo *reg in thread.registers) {
+    for (PLCrashReportRegisterInfo *reg in thread.registers) {
         if ([reg.registerName isEqualToString:regName]) {
             regAddress = reg.registerValue;
             break;
@@ -583,7 +583,7 @@ static const char *findSEL (const char *imageName, NSString *imageUUID, uint64_t
     if (regAddress == 0)
         return nil;
     
-    BITPLCrashReportBinaryImageInfo *imageForRegAddress = [report imageForAddress:regAddress];
+    PLCrashReportBinaryImageInfo *imageForRegAddress = [report imageForAddress:regAddress];
     if (imageForRegAddress) {
         // get the SEL
         const char *foundSelector = findSEL([imageForRegAddress.imageName UTF8String], imageForRegAddress.imageUUID, regAddress - (uint64_t)imageForRegAddress.imageBaseAddress);
@@ -604,11 +604,11 @@ static const char *findSEL (const char *imageName, NSString *imageUUID, uint64_t
  *
  * @return Returns the formatted result on success, or nil if an error occurs.
  */
-+ (NSArray *)arrayOfAppUUIDsForCrashReport:(BITPLCrashReport *)report {
++ (NSArray *)arrayOfAppUUIDsForCrashReport:(PLCrashReport *)report {
 	NSMutableArray* appUUIDs = [NSMutableArray array];
     
     /* Images. The iPhone crash report format sorts these in ascending order, by the base address */
-    for (BITPLCrashReportBinaryImageInfo *imageInfo in [report.images sortedArrayUsingFunction: binaryImageSort context: nil]) {
+    for (PLCrashReportBinaryImageInfo *imageInfo in [report.images sortedArrayUsingFunction: binaryImageSort context: nil]) {
         NSString *uuid;
         /* Fetch the UUID if it exists */
         if (imageInfo.hasImageUUID)
@@ -699,7 +699,7 @@ static const char *findSEL (const char *imageName, NSString *imageUUID, uint64_t
 
 @implementation BITCrashReportTextFormatter (PrivateAPI)
 
-+ (NSString *)bit_archNameFromImageInfo:(BITPLCrashReportBinaryImageInfo *)imageInfo {
++ (NSString *)bit_archNameFromImageInfo:(PLCrashReportBinaryImageInfo *)imageInfo {
     NSString *archName = @"???";
     if (imageInfo.codeType != nil && imageInfo.codeType.typeEncoding == PLCrashReportProcessorTypeEncodingMach) {
         switch (imageInfo.codeType.type) {
@@ -772,9 +772,9 @@ static const char *findSEL (const char *imageName, NSString *imageUUID, uint64_t
  *
  * @return Returns a formatted frame line.
  */
-+ (NSString *)bit_formatStackFrame: (BITPLCrashReportStackFrameInfo *) frameInfo
++ (NSString *)bit_formatStackFrame: (PLCrashReportStackFrameInfo *) frameInfo
                         frameIndex: (NSUInteger) frameIndex
-                            report: (BITPLCrashReport *) report
+                            report: (PLCrashReport *) report
                               lp64: (BOOL) lp64
 {
     /* Base image address containing instrumention pointer, offset of the IP from that base
@@ -784,7 +784,7 @@ static const char *findSEL (const char *imageName, NSString *imageUUID, uint64_t
     NSString *imageName = @"\?\?\?";
     NSString *symbolString = nil;
     
-    BITPLCrashReportBinaryImageInfo *imageInfo = [report imageForAddress: frameInfo.instructionPointer];
+    PLCrashReportBinaryImageInfo *imageInfo = [report imageForAddress: frameInfo.instructionPointer];
     if (imageInfo != nil) {
         imageName = [imageInfo.imageName lastPathComponent];
         baseAddress = imageInfo.imageBaseAddress;

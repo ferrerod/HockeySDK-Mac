@@ -49,12 +49,12 @@ NSString *const kBITHockeySDKURL = @"https://sdk.hockeyapp.net/";
     self.hockeyAppClient = nil;
     
     _disableCrashManager = NO;
-    _disableFeedbackManager = NO;
-    _disableMetricsManager = NO;
+    _disableFeedbackManager = YES;
+    _disableMetricsManager = YES;
     
     self.startManagerIsInvoked = NO;
     
-    [self performSelector:@selector(validateStartManagerIsInvoked) withObject:nil afterDelay:0.0];
+//    [self performSelector:@selector(validateStartManagerIsInvoked) withObject:nil afterDelay:0.0];
   }
   return self;
 }
@@ -224,10 +224,10 @@ NSString *const kBITHockeySDKURL = @"https://sdk.hockeyapp.net/";
     [BITCategoryContainer activateCategory];
   }
   
-  NSString *integrationFlowTime = [self integrationFlowTimeString];
-  if (integrationFlowTime && [self integrationFlowStartedWithTimeString:integrationFlowTime]) {
-    [self pingServerForIntegrationStartWorkflowWithTimeString:integrationFlowTime];
-  }
+//  NSString *integrationFlowTime = [self integrationFlowTimeString];
+//  if (integrationFlowTime && [self integrationFlowStartedWithTimeString:integrationFlowTime]) {
+//    [self pingServerForIntegrationStartWorkflowWithTimeString:integrationFlowTime];
+//  }
 }
 
 - (void)validateStartManagerIsInvoked {
@@ -258,9 +258,11 @@ NSString *const kBITHockeySDKURL = @"https://sdk.hockeyapp.net/";
   
   if (_serverURL != aServerURL) {
     _serverURL = [aServerURL copy];
-    
+
     if (self.hockeyAppClient) {
-      self.hockeyAppClient.baseURL = [NSURL URLWithString:_serverURL ?: kBITHockeySDKURL];
+      NSURL *baseURL = [NSURL URLWithString:self.serverURL ?: kBITHockeySDKURL];
+      BITHockeyLogDebug(@"DEBUG: BITHockeyAppClient.baseURL = [%@]", [baseURL absoluteString]);
+      self.hockeyAppClient.baseURL = baseURL;
     }
   }
 }
@@ -297,37 +299,43 @@ NSString *const kBITHockeySDKURL = @"https://sdk.hockeyapp.net/";
 }
 
 - (void)setUserID:(NSString *)userID {
-  if (!userID) {
-    bit_removeKeyFromKeychain(kBITDefaultUserID);
-  } else {
-    bit_addStringValueToKeychain(userID, kBITDefaultUserID);
+  if (self.crashManager.persistUserInfo) {
+    if (!userID) {
+      bit_removeKeyFromKeychain(kBITDefaultUserID);
+    } else {
+      bit_addStringValueToKeychain(userID, kBITDefaultUserID);
+    }
   }
 }
 
 - (void)setUserName:(NSString *)userName {
-  if (!userName) {
-    bit_removeKeyFromKeychain(kBITDefaultUserName);
-  } else {
-    bit_addStringValueToKeychain(userName, kBITDefaultUserName);
+  if (self.crashManager.persistUserInfo) {
+    if (!userName) {
+      bit_removeKeyFromKeychain(kBITDefaultUserName);
+    } else {
+      bit_addStringValueToKeychain(userName, kBITDefaultUserName);
+    }
   }
 }
 
 - (void)setUserEmail:(NSString *)userEmail {
-  if (!userEmail) {
-    bit_removeKeyFromKeychain(kBITDefaultUserEmail);
-  } else {
-    bit_addStringValueToKeychain(userEmail, kBITDefaultUserEmail);
+  if (self.crashManager.persistUserInfo) {
+    if (!userEmail) {
+      bit_removeKeyFromKeychain(kBITDefaultUserEmail);
+    } else {
+      bit_addStringValueToKeychain(userEmail, kBITDefaultUserEmail);
+    }
   }
 }
 
 - (void)testIdentifier {
-  if (!self.appIdentifier) {
-    return;
-  }
-  
-  NSDate *now = [NSDate date];
-  NSString *timeString = [NSString stringWithFormat:@"%.0f", [now timeIntervalSince1970]];
-  [self pingServerForIntegrationStartWorkflowWithTimeString:timeString];
+//  if (!self.appIdentifier) {
+//    return;
+//  }
+//
+//  NSDate *now = [NSDate date];
+//  NSString *timeString = [NSString stringWithFormat:@"%.0f", [now timeIntervalSince1970]];
+//  [self pingServerForIntegrationStartWorkflowWithTimeString:timeString];
 }
 
 
@@ -355,18 +363,18 @@ NSString *const kBITHockeySDKURL = @"https://sdk.hockeyapp.net/";
   
   // if we don't initialize the BITCrashManager instance, then the delegate will not be invoked
   // leaving the app to never show the window if the developer provided an invalid app identifier
-  if (!self.validAppIdentifier) {
-    [self logInvalidIdentifier:@"app identifier"];
-    self.disableCrashManager = YES;
-  } else {
-    BITHockeyLogDebug(@"INFO: Setup FeedbackManager");
-    self.feedbackManager = [[BITFeedbackManager alloc] initWithAppIdentifier:self.appIdentifier];
-    
-    BITHockeyLogDebug(@"INFO: Setup MetricsManager");
-    NSString *iKey = bit_appIdentifierToGuid(self.appIdentifier);
-    self.metricsManager = [[BITMetricsManager alloc] initWithAppIdentifier:iKey];
-  }
-  
+//  if (!self.validAppIdentifier) {
+//      [self logInvalidIdentifier:@"app identifier"];
+//    self.disableCrashManager = YES;
+//  } else {
+//    BITHockeyLogDebug(@"INFO: Setup FeedbackManager");
+//    self.feedbackManager = [[BITFeedbackManager alloc] initWithAppIdentifier:self.appIdentifier];
+//
+//    BITHockeyLogDebug(@"INFO: Setup MetricsManager");
+//    NSString *iKey = bit_appIdentifierToGuid(self.appIdentifier);
+//    self.metricsManager = [[BITMetricsManager alloc] initWithAppIdentifier:iKey];
+//  }
+
   if ([self isCrashManagerDisabled])
     self.crashManager.crashManagerActivated = NO;
 }

@@ -1,7 +1,7 @@
 #import <Foundation/Foundation.h>
 
-#import "PLCrashNamespace.h"
-#import "PLCrashReport.h"
+#import <CrashReporter/PLCrashNamespace.h>
+#import <CrashReporter/PLCrashReport.h>
 
 // Dictionary keys for array elements returned by arrayOfAppUUIDsForCrashReport:
 #ifndef kBITBinaryImageKeyUUID
@@ -14,7 +14,7 @@
 @interface BITCrashReportTextFormatter : NSObject {
 }
 
-+ (NSString *)stringValueForCrashReport:(BITPLCrashReport *)report crashReporterKey:(NSString *)crashReporterKey;
-+ (NSArray *)arrayOfAppUUIDsForCrashReport:(BITPLCrashReport *)report;
++ (NSString *)stringValueForCrashReport:(PLCrashReport *)report crashReporterKey:(NSString *)crashReporterKey;
++ (NSArray *)arrayOfAppUUIDsForCrashReport:(PLCrashReport *)report;
 
 @end

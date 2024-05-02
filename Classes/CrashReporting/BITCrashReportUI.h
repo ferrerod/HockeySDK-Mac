@@ -4,6 +4,8 @@
 
 @interface BITCrashReportUI : NSWindowController
 
+@property (nonatomic, strong) IBOutlet NSImageView *imageView;
+
 // defines the users name or user id
 @property (nonatomic, copy) NSString *userName;
 
