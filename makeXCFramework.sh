@@ -1,3 +1,6 @@
+mkdir -p Vendor
+mkdir -p archives
+mkdir -p xcframeworks
 rm -rf Vendor/*
 rm -rf archives/*
 rm -rf xcframeworks/*
