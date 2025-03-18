@@ -21,3 +21,10 @@ profile
 
 Documentation/HockeySDK/Generated/
 Products
+
+xcuserdata
+
+# temporary
+xcframeworks
+Vendor
+archives
