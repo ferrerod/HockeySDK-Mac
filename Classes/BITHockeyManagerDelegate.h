@@ -1,6 +1,8 @@
 #import <Foundation/Foundation.h>
 #import "BITCrashManagerDelegate.h"
 
+#import "BITHockeyUserData.h"
+
 @class BITHockeyManager;
 @class BITHockeyBaseManager;
 
@@ -87,5 +89,16 @@
  @see userNameForHockeyManager:componentManager:
  */
 - (NSString *)userEmailForHockeyManager:(BITHockeyManager *)hockeyManager componentManager:(BITHockeyBaseManager *)componentManager;
+
+
+/** Called after user manually submits meta data when prompted, for a crash report or Feedback form.
+ Delegate should evaluate userProvidedData to determine if userID, userName and userEmail should be persisted.
+ If user choose "always send" this delegate will not be called again.
+
+ @param userProvidedData The BITHockeyUserData filled in with any user provided data: possibly userID, userName, userEmail, userProvidedText.
+ @param hockeyManager The `BITHockeyManager` HockeyManager instance invoking this delegate
+ @param componentManager The `BITHockeyBaseManager` component instance invoking this delegate, can be `BITCrashManager` or `BITFeedbackManager`
+ */
+- (void)userProvidedData:(BITHockeyUserData *)userProvidedData hockeyManager:(BITHockeyManager *)hockeyManager componentManager:(BITHockeyBaseManager *)componentManager;
 
 @end

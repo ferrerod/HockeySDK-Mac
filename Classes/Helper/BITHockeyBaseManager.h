@@ -30,9 +30,4 @@
  */
 @property (nonatomic, copy) NSString *userEmail;
 
-/**
- *  Flag to enable/disable storing user settings in keychain
- */
-@property (nonatomic, assign) BOOL persistUserInfo;
-
 @end

@@ -7,6 +7,8 @@
 
 #import "BITHockeyAttachment.h"
 
+#import "BITHockeyUserData.h"
+
 #import "BITCrashManager.h"
 #import "BITCrashManagerDelegate.h"
 #import "BITCrashDetails.h"
@@ -22,10 +24,6 @@
 
 // Notification message which HockeyManager is listening to, to retry requesting updated from the server
 #define BITHockeyNetworkDidBecomeReachableNotification @"BITHockeyNetworkDidBecomeReachable"
-
-extern NSString *const kBITDefaultUserID;
-extern NSString *const kBITDefaultUserName;
-extern NSString *const kBITDefaultUserEmail;
 
 /**
  *  HockeySDK Crash Reporter error domain

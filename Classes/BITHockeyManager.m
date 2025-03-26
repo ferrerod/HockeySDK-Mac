@@ -298,36 +298,6 @@ NSString *const kBITHockeySDKURL = @"https://sdk.hockeyapp.net/";
   [BITHockeyLogger setLogHandler:logHandler];
 }
 
-- (void)setUserID:(NSString *)userID {
-  if (self.crashManager.persistUserInfo) {
-    if (!userID) {
-      bit_removeKeyFromKeychain(kBITDefaultUserID);
-    } else {
-      bit_addStringValueToKeychain(userID, kBITDefaultUserID);
-    }
-  }
-}
-
-- (void)setUserName:(NSString *)userName {
-  if (self.crashManager.persistUserInfo) {
-    if (!userName) {
-      bit_removeKeyFromKeychain(kBITDefaultUserName);
-    } else {
-      bit_addStringValueToKeychain(userName, kBITDefaultUserName);
-    }
-  }
-}
-
-- (void)setUserEmail:(NSString *)userEmail {
-  if (self.crashManager.persistUserInfo) {
-    if (!userEmail) {
-      bit_removeKeyFromKeychain(kBITDefaultUserEmail);
-    } else {
-      bit_addStringValueToKeychain(userEmail, kBITDefaultUserEmail);
-    }
-  }
-}
-
 - (void)testIdentifier {
 //  if (!self.appIdentifier) {
 //    return;

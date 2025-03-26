@@ -162,62 +162,48 @@
 }
 
 - (BOOL)updateUserIDUsingDelegate {
-  BOOL availableViaDelegate = NO;
-  
-  NSString *userID = bit_stringValueFromKeychainForKey(kBITDefaultUserID);
-  
-  id<BITHockeyManagerDelegate> delegate = [BITHockeyManager sharedHockeyManager].delegate;
-  if (delegate && [delegate respondsToSelector:@selector(userIDForHockeyManager:componentManager:)]) {
-    userID = [delegate userIDForHockeyManager:[BITHockeyManager sharedHockeyManager]
-                             componentManager:self] ?: userID;
+  NSString *userID = nil;
+
+  id<BITHockeyManagerDelegate> strongDelegate = [BITHockeyManager sharedHockeyManager].delegate;
+  if ([strongDelegate respondsToSelector:@selector(userIDForHockeyManager:componentManager:)]) {
+    userID = [strongDelegate userIDForHockeyManager:[BITHockeyManager sharedHockeyManager] componentManager:self];
   }
-  
-  if (userID) {
-    availableViaDelegate = YES;
-    self.userID = userID;
-  }
-  
-  return availableViaDelegate;
+
+  self.userID = userID ?: @"";
+
+  return userID != nil;
 }
 
 - (BOOL)updateUserNameUsingDelegate {
-  BOOL availableViaDelegate = NO;
-  
-  NSString *userName = bit_stringValueFromKeychainForKey(kBITDefaultUserName);
-  
-  id<BITHockeyManagerDelegate> delegate = [BITHockeyManager sharedHockeyManager].delegate;
-  if (delegate && [delegate respondsToSelector:@selector(userNameForHockeyManager:componentManager:)]) {
-    userName = [delegate userNameForHockeyManager:[BITHockeyManager sharedHockeyManager]
-                                 componentManager:self] ?: userName;
+  NSString *userName = nil;
+
+  id<BITHockeyManagerDelegate> strongDelegate = [BITHockeyManager sharedHockeyManager].delegate;
+  if ([strongDelegate respondsToSelector:@selector(userNameForHockeyManager:componentManager:)]) {
+    userName = [strongDelegate userNameForHockeyManager:[BITHockeyManager sharedHockeyManager] componentManager:self];
   }
   
+  self.userName = userName ?: @"";
   if (userName) {
-    availableViaDelegate = YES;
-    self.userName = userName;
     self.requireUserName = BITFeedbackUserDataElementDontShow;
   }
-  
-  return availableViaDelegate;
+
+  return userName != nil;
 }
 
 - (BOOL)updateUserEmailUsingDelegate {
-  BOOL availableViaDelegate = NO;
-  
-  NSString *userEmail = bit_stringValueFromKeychainForKey(kBITDefaultUserEmail);
-  
-  id<BITHockeyManagerDelegate> delegate = [BITHockeyManager sharedHockeyManager].delegate;
-  if (delegate && [delegate respondsToSelector:@selector(userEmailForHockeyManager:componentManager:)]) {
-    userEmail = [delegate userEmailForHockeyManager:[BITHockeyManager sharedHockeyManager]
-                                   componentManager:self] ?: userEmail;
+  NSString *userEmail = nil;
+
+  id<BITHockeyManagerDelegate> strongDelegate = [BITHockeyManager sharedHockeyManager].delegate;
+  if ([strongDelegate respondsToSelector:@selector(userEmailForHockeyManager:componentManager:)]) {
+    userEmail = [strongDelegate userEmailForHockeyManager:[BITHockeyManager sharedHockeyManager] componentManager:self];
   }
-  
+
+  self.userEmail = userEmail ?: @"";
   if (userEmail) {
-    availableViaDelegate = YES;
-    self.userEmail = userEmail;
-    self.requireUserEmail = BITFeedbackUserDataElementDontShow;
+      self.requireUserEmail = BITFeedbackUserDataElementDontShow;
   }
-  
-  return availableViaDelegate;
+
+  return userEmail != nil;
 }
 
 - (void)updateAppDefinedUserData {
@@ -226,8 +212,7 @@
   [self updateUserEmailUsingDelegate];
   
   // if both values are shown via the delegates, we never ever did ask and will never ever ask for user data
-  if (self.requireUserName == BITFeedbackUserDataElementDontShow &&
-      self.requireUserEmail == BITFeedbackUserDataElementDontShow) {
+  if (self.requireUserName == BITFeedbackUserDataElementDontShow && self.requireUserEmail == BITFeedbackUserDataElementDontShow) {
     self.didAskUserData = NO;
   }
 }
@@ -349,6 +334,23 @@
   
   [archiver finishEncoding];
   [data writeToFile:self.settingsFile atomically:YES];
+
+  // Tell BITHockeyManagerDelegate about userProvidedMetaData
+  id<BITHockeyManagerDelegate> strongDelegate = [BITHockeyManager sharedHockeyManager].delegate;
+  if ([strongDelegate respondsToSelector:@selector(userProvidedData:hockeyManager:componentManager:)]) {
+    BITHockeyUserData *userData = [[BITHockeyUserData alloc] init];
+    userData.userName = self.userName ?: @"";
+    userData.userEmail = self.userEmail ?: @"";
+    userData.userProvidedText = @"";
+
+    if ([self.feedbackList count] > 0)
+    {
+      BITFeedbackMessage *firstFeedbackMessage = [self.feedbackList objectAtIndex:0];
+      userData.userProvidedText = firstFeedbackMessage.text;
+    }
+    [strongDelegate userProvidedData:userData hockeyManager:[BITHockeyManager sharedHockeyManager] componentManager:self];
+  }
+
 }
 
 
